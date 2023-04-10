@@ -17,7 +17,9 @@ npm start
 ```
 
 If you want to make a application file on macOS, follow the below steps.
+
 ```
+npm exec --package=@electron-forge/cli -c "electron-forge import"
 npm run make
 open ./out/quickgpt-darwin-arm64/quickgpt.app
 ```
