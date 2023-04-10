@@ -2,6 +2,9 @@ module.exports = {
   packagerConfig: {
     icon: 'icons/icon'
   },
+  packagerConfig: {
+    osxSign: {} // object must exist even if empty
+  },
   rebuildConfig: {},
   makers: [
     {

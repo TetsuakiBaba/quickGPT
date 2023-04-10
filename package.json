@@ -7,7 +7,8 @@
     "start": "electron-forge start",
     "test": "echo \"Error: no test specified\" && exit 1",
     "package": "electron-forge package",
-    "make": "electron-forge make"
+    "make": "electron-forge make",
+    "build": "electron-builder --mac --arm64"
   },
   "keywords": [],
   "author": "",
@@ -18,9 +19,12 @@
     "@electron-forge/maker-rpm": "^6.1.1",
     "@electron-forge/maker-squirrel": "^6.1.1",
     "@electron-forge/maker-zip": "^6.1.1",
-    "electron": "^24.0.0"
+    "electron": "^24.0.0",
+    "electron-builder": "^23.6.0"
   },
   "dependencies": {
+    "@electron/osx-sign": "^1.0.4",
+    "electron-packager": "^17.1.1",
     "electron-squirrel-startup": "^1.0.0"
   }
 }
