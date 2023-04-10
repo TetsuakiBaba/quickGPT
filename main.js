@@ -1,9 +1,13 @@
 // main.js
+require('update-electron-app')()
+
 const is_windows = process.platform === 'win32';
 const is_mac = process.platform === 'darwin';
 const is_linux = process.platform === 'linux';
 
-const { app, BrowserWindow, globalShortcut, Menu, Tray } = require('electron')
+const { app, BrowserWindow, globalShortcut, Menu, Tray, clipboard } = require('electron')
+
+
 let mainWindow = null
 
 function createWindow() {
@@ -77,19 +81,19 @@ function createTray() {
 
 app.whenReady().then(() => {
     mainWindow = createWindow()
-    let menu = Menu.buildFromTemplate(
-        [
-            {
-                label: app.name,
-                submenu: [
-                    {
-                        role: 'quit',
-                        label: `${app.name}を終了`
-                    }
-                ]
-            }
-        ]);
-    Menu.setApplicationMenu(menu);
+    // let menu = Menu.buildFromTemplate(
+    //     [
+    //         {
+    //             label: app.name,
+    //             submenu: [
+    //                 {
+    //                     role: 'quit',
+    //                     label: `${app.name}を終了`
+    //                 }
+    //             ]
+    //         }
+    //     ]);
+    // Menu.setApplicationMenu(menu);
     createTray()
 
     app.on('activate', function () {

@@ -1,30 +1,35 @@
 {
-  "name": "quickgpt",
-  "version": "1.0.0",
-  "description": "",
+  "name": "QuickGPT",
+  "version": "1.0.2",
+  "description": "quick access to openai chat.",
   "main": "main.js",
   "scripts": {
     "start": "electron-forge start",
-    "test": "echo \"Error: no test specified\" && exit 1",
     "package": "electron-forge package",
     "make": "electron-forge make",
-    "build": "electron-builder --mac --arm64"
+    "publish": "electron-forge publish"
   },
-  "keywords": [],
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TetsuakiBaba/quickGPT.git"
+  },
+  "author": "Tetsuaki BABA",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TetsuakiBaba/quickGPT/issues"
+  },
+  "homepage": "https://github.com/TetsuakiBaba/quickGPT#readme",
   "devDependencies": {
     "@electron-forge/cli": "^6.1.1",
     "@electron-forge/maker-deb": "^6.1.1",
     "@electron-forge/maker-rpm": "^6.1.1",
     "@electron-forge/maker-squirrel": "^6.1.1",
     "@electron-forge/maker-zip": "^6.1.1",
-    "electron": "^24.0.0",
-    "electron-builder": "^23.6.0"
+    "@electron-forge/publisher-github": "^6.1.1",
+    "electron": "24.0.0"
   },
   "dependencies": {
-    "@electron/osx-sign": "^1.0.4",
-    "electron-packager": "^17.1.1",
-    "electron-squirrel-startup": "^1.0.0"
+    "electron-squirrel-startup": "^1.0.0",
+    "update-electron-app": "^2.0.1"
   }
 }
