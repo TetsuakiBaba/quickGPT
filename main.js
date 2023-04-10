@@ -49,6 +49,18 @@ const path = require('path')
 
 let tray = null
 
+function toggleWindow() {
+    if (mainWindow && mainWindow.isDestroyed()) {
+        mainWindow = createWindow();
+    }
+    else {
+        if (mainWindow.isVisible()) {
+            mainWindow.hide()
+        } else {
+            mainWindow.show()
+        }
+    }
+}
 function createTray() {
     tray = new Tray(path.join(__dirname, 'icons/iconx16.png'))
 
@@ -57,11 +69,7 @@ function createTray() {
             label: 'Toggle Visibility',
             accelerator: process.platform === 'darwin' ? 'Control+Shift+G' : 'Control+Shift+G',
             click: () => {
-                if (mainWindow.isVisible()) {
-                    mainWindow.hide()
-                } else {
-                    mainWindow.show()
-                }
+                toggleWindow();
             }
         },
         {
@@ -103,15 +111,16 @@ app.whenReady().then(() => {
     })
 
     globalShortcut.register('Control+Shift+G', () => {
-        if (mainWindow.isVisible()) {
-            mainWindow.hide()
-        } else {
-            mainWindow.show()
-        }
+        toggleWindow();
     })
 
     globalShortcut.register('Control+Shift+R', () => {
-        mainWindow.loadURL('https://chat.openai.com/chat')
+        if (mainWindow && mainWindow.isDestroyed()) {
+            mainWindow = craeteWindow();
+        }
+        else {
+            mainWindow.loadURL('https://chat.openai.com/chat')
+        }
     })
 })
 
