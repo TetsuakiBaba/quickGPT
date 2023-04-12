@@ -28,6 +28,17 @@ function createWindow() {
     })
 
     win.loadURL('https://chat.openai.com/chat')
+    win.webContents.on('did-finish-load', () => {
+        console.log('loaded');
+        const textBoxSelector = 'textarea'; // 任意のテキストボックスのセレクターを指定
+        win.webContents.executeJavaScript(`
+            const textBox = document.querySelector('${textBoxSelector}');
+            if (textBox) {
+              textBox.focus();
+            }
+            console.log(textBox);
+          `);
+    });
     return win
 }
 
@@ -57,7 +68,16 @@ function toggleWindow() {
         if (mainWindow.isVisible()) {
             mainWindow.hide()
         } else {
-            mainWindow.show()
+            mainWindow.show();
+            mainWindow.on('show', () => {
+                mainWindow.focus();
+                const textBoxSelector = 'textarea'; // 任意のテキストボックスのセレクターを指定
+                mainWindow.webContents.executeJavaScript(`
+                document.querySelector('${textBoxSelector}').focus();
+          `);
+            });
+
+
         }
     }
 }
