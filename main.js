@@ -140,6 +140,9 @@ app.whenReady().then(() => {
     globalShortcut.register('Control+Shift+G', () => {
         toggleWindow();
     })
+    globalShortcut.register('Control+Shift+Q', () => {
+        toggleWindow();
+    })
 
     globalShortcut.register('Control+Shift+R', () => {
         if (mainWindow && mainWindow.isDestroyed()) {
