@@ -1,6 +1,7 @@
 // main.js
 require('update-electron-app')()
 
+
 const is_windows = process.platform === 'win32';
 const is_mac = process.platform === 'darwin';
 const is_linux = process.platform === 'linux';
@@ -14,10 +15,12 @@ function createWindow() {
     const win = new BrowserWindow({
         width: 800,
         height: 600,
-        //frame: false,
+        frame: true,
+        titleBarOverlay: true,
         //transparent: true,
-        hasShadow: false,
+        hasShadow: true,
         webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
             contextIsolation: true,
             sandbox: true
@@ -27,6 +30,10 @@ function createWindow() {
         alwaysOnTop: true
     })
 
+    // ウィンドウをドラッグして移動できるようにする
+
+
+    win.setWindowButtonVisibility(false);
     win.loadURL('https://chat.openai.com/chat')
     win.webContents.on('did-finish-load', () => {
         console.log('loaded');
@@ -36,9 +43,9 @@ function createWindow() {
             if (textBox) {
               textBox.focus();
             }
-            console.log(textBox);
           `);
     });
+
     return win
 }
 

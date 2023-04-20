@@ -2,13 +2,27 @@
 
 An application that instantly opens open ai chat (chat gpt) on your desktop
 
+ * You can instantly switch between displaying and hiding chats with keyboard shortcuts.
+ * When switching between views, the input prompt is automatically activated so that you can enter text immediately.
+ * Chat is never sent by pressing the confirm enter button for Japanese conversion, etc.
+
+
 ![](./teaser.png)
 
 ## Shortcut list
  - Control+Shift+G: Toggle window display
  - Control+Shift+R: Reload screen
 
-## Install
+# Install
+
+## macOS
+A binary package is available for users on macOS. Please download the latest version of the zip file from the link below.
+ * https://github.com/TetsuakiBaba/quickGPT/releases
+
+## Windows/Linux
+Since we do not distribute binary packages, please follow the Build instructions to build the package.
+
+# Build
 ```
 git clone https://github.com/TetsuakiBaba/quickGPT.git
 cd quickGPT
