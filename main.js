@@ -1,12 +1,11 @@
 // main.js
 require('update-electron-app')()
 
-
 const is_windows = process.platform === 'win32';
 const is_mac = process.platform === 'darwin';
 const is_linux = process.platform === 'linux';
 
-const { app, BrowserWindow, globalShortcut, Menu, Tray, clipboard } = require('electron')
+const { app, BrowserWindow, globalShortcut, Menu, Tray, clipboard, screen } = require('electron')
 
 
 let mainWindow = null
@@ -31,8 +30,6 @@ function createWindow() {
     })
 
     // ウィンドウをドラッグして移動できるようにする
-
-
     win.setWindowButtonVisibility(false);
     win.loadURL('https://chat.openai.com/chat')
     win.webContents.on('did-finish-load', () => {
@@ -67,14 +64,39 @@ const path = require('path')
 
 let tray = null
 
+// function toggleWindow() {
+//     if (mainWindow && mainWindow.isDestroyed()) {
+//         mainWindow = createWindow();
+//     }
+//     else {
+//         if (mainWindow.isVisible()) {
+//             mainWindow.hide()
+//         } else {
+//             mainWindow.show();
+//             mainWindow.on('show', () => {
+//                 mainWindow.focus();
+//                 const textBoxSelector = 'textarea'; // 任意のテキストボックスのセレクターを指定
+//                 mainWindow.webContents.executeJavaScript(`
+//                 document.querySelector('${textBoxSelector}').focus();
+//           `);
+//             });
+
+
+//         }
+//     }
+// }
 function toggleWindow() {
     if (mainWindow && mainWindow.isDestroyed()) {
         mainWindow = createWindow();
     }
     else {
         if (mainWindow.isVisible()) {
-            mainWindow.hide()
+            mainWindow.hide();
         } else {
+            // マウスポインタの現在の位置を取得
+            const { x, y } = screen.getCursorScreenPoint();
+            mainWindow.setPosition(x, y);
+
             mainWindow.show();
             mainWindow.on('show', () => {
                 mainWindow.focus();
@@ -83,11 +105,10 @@ function toggleWindow() {
                 document.querySelector('${textBoxSelector}').focus();
           `);
             });
-
-
         }
     }
 }
+
 function createTray() {
     tray = new Tray(path.join(__dirname, 'icons/iconx16.png'))
 
