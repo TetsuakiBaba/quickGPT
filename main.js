@@ -1,6 +1,9 @@
 // main.js
 require('update-electron-app')()
 
+// run this as early in the main process as possible
+if (require('electron-squirrel-startup')) app.quit();
+
 const is_windows = process.platform === 'win32';
 const is_mac = process.platform === 'darwin';
 const is_linux = process.platform === 'linux';
