@@ -8,7 +8,7 @@ const is_windows = process.platform === 'win32';
 const is_mac = process.platform === 'darwin';
 const is_linux = process.platform === 'linux';
 
-const { app, BrowserWindow, globalShortcut, Menu, Tray, clipboard, screen } = require('electron')
+const { app, BrowserWindow, globalShortcut, Menu, Tray, clipboard, screen, shell } = require('electron')
 
 
 let mainWindow = null
@@ -33,7 +33,7 @@ function createWindow() {
     })
 
     // ウィンドウをドラッグして移動できるようにする
-    win.setWindowButtonVisibility(false);
+    //win.setWindowButtonVisibility(false); // only macos
     win.loadURL('https://chat.openai.com/chat')
     win.webContents.on('did-finish-load', () => {
         console.log('loaded');

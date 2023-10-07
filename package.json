@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "package-win": "electron-forge package --platform=win32",
+    "package-win": "electron-forge package --platform=win32 --arch=x64",
     "make": "electron-forge make",
     "publish": "electron-forge publish"
   },
