@@ -15,11 +15,11 @@ An application that instantly opens open ai chat (chat gpt) on your desktop
 
 # Install
 
-## macOS
+## macOS, Windows
 A binary package is available for users on macOS. Please download the latest version of the zip file from the link below.
  * https://github.com/TetsuakiBaba/quickGPT/releases
 
-## Windows/Linux
+## Linux
 Since we do not distribute binary packages, please follow the Build instructions to build the package.
 
 # Build
