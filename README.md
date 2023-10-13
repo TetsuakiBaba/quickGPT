@@ -1,8 +1,13 @@
+<p align="center">
+  <img src="icons/icon.png" width="100px" alt="Substitute image text here">
+</p>
+
 # QuickGPT
 
 An application that instantly opens open ai chat (chat gpt) on your desktop
 
  * You can instantly switch between displaying and hiding chats with keyboard shortcuts.
+ * The chat window is always displayed on the position of your mouse cursor.
  * When switching between views, the input prompt is automatically activated so that you can enter text immediately.
  * Chat is never sent by pressing the confirm enter button for Japanese conversion, etc.
 

@@ -8,8 +8,10 @@ const is_windows = process.platform === 'win32';
 const is_mac = process.platform === 'darwin';
 const is_linux = process.platform === 'linux';
 
-const { app, BrowserWindow, globalShortcut, Menu, Tray, clipboard, screen, shell } = require('electron')
+const { app, BrowserWindow, globalShortcut, Menu, Tray, clipboard, screen, shell, ipcMain } = require('electron')
 
+const packageJson = require('./package.json');
+const version = packageJson.version;
 
 let mainWindow = null
 
@@ -25,7 +27,7 @@ function createWindow() {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
             contextIsolation: true,
-            // sandbox: true
+            sandbox: true
         },
         show: true,
         icon: path.join(__dirname, 'icons/icon.png'),
@@ -45,6 +47,13 @@ function createWindow() {
             }
           `);
     });
+    // 以下を追加
+    win.webContents.setWindowOpenHandler(({ url }) => {
+        if (url.startsWith('http')) {
+            shell.openExternal(url)
+        }
+        return { action: 'deny' }
+    })
 
     return win
 }
@@ -118,7 +127,7 @@ function createTray() {
     const contextMenu = Menu.buildFromTemplate([
         {
             label: 'Toggle Visibility',
-            accelerator: process.platform === 'darwin' ? 'Control+Shift+G' : 'Control+Shift+G',
+            accelerator: process.platform === 'darwin' ? 'Control+Shift+Q' : 'Control+Shift+Q',
             click: () => {
                 toggleWindow();
             }
@@ -130,13 +139,51 @@ function createTray() {
                 mainWindow.loadURL('https://chat.openai.com/chat')
             }
         },
+
         { type: 'separator' },
+        {
+            label: 'About',
+            click: () => {
+                //mainWindow.loadFile(path.join(__dirname, 'about.html'));
+                const mainWindowSize = mainWindow.getSize();
+                const mainWindowPos = mainWindow.getPosition();
+
+                const aboutWindowWidth = 300;
+                const aboutWindowHeight = 280;
+
+                const aboutWindowPosX = mainWindowPos[0] + (mainWindowSize[0] - aboutWindowWidth) / 2;
+                const aboutWindowPosY = mainWindowPos[1] + (mainWindowSize[1] - aboutWindowHeight) / 2;
+
+                let win = new BrowserWindow({
+                    title: "About QuickGPT",
+                    width: aboutWindowWidth,
+                    height: aboutWindowHeight,
+                    x: aboutWindowPosX,
+                    y: aboutWindowPosY,
+                    hasShadow: false,
+                    alwaysOnTop: true,
+                    resizable: false,
+                    frame: false,
+                    webPreferences: {
+                        preload: path.join(__dirname, 'preload.js'),
+                        nodeIntegration: false,
+                        contextIsolation: true
+                    }
+                });
+                win.loadFile(path.join(__dirname, `about.html`)).then(() => {
+                    win.webContents.executeJavaScript(`setVersion("${version}");`, true)
+                        .then(result => {
+                        }).catch(console.error);
+                });
+            }
+        },
         { role: 'quit' }
     ])
 
     tray.setToolTip('OpenAI Chat App')
     tray.setContextMenu(contextMenu)
 }
+
 
 app.whenReady().then(() => {
     mainWindow = createWindow()
@@ -147,7 +194,7 @@ app.whenReady().then(() => {
     //             submenu: [
     //                 {
     //                     role: 'quit',
-    //                     label: `${app.name}を終了`
+    //                     label: `${ app.name }を終了`
     //                 }
     //             ]
     //         }
