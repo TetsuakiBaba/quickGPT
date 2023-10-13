@@ -25,7 +25,7 @@ function createWindow() {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
             contextIsolation: true,
-            sandbox: true
+            // sandbox: true
         },
         show: true,
         icon: path.join(__dirname, 'icons/icon.png'),
@@ -34,7 +34,7 @@ function createWindow() {
 
     // ウィンドウをドラッグして移動できるようにする
     //win.setWindowButtonVisibility(false); // only macos
-    win.loadURL('https://chat.openai.com/chat')
+    win.loadURL('https://chat.openai.com/chat');
     win.webContents.on('did-finish-load', () => {
         console.log('loaded');
         const textBoxSelector = 'textarea'; // 任意のテキストボックスのセレクターを指定
@@ -113,7 +113,7 @@ function toggleWindow() {
 }
 
 function createTray() {
-    tray = new Tray(path.join(__dirname, 'icons/iconx16.png'))
+    tray = new Tray(path.join(__dirname, 'icons/icon_trayx16.png'))
 
     const contextMenu = Menu.buildFromTemplate([
         {
