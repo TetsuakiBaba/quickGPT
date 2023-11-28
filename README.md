@@ -15,8 +15,9 @@ An application that instantly opens open ai chat (chat gpt) on your desktop
 ![](./teaser.png)
 
 ## Shortcut list
- - Control+Shift+G / Control+Shift+Q: Toggle window display
- - Control+Shift+R: Reload screen
+ - Control+Shift+Q: Toggle window display
+ - Control+Shift+C: Load ChatGPT Chat page
+ - Control+Shift+A: Load ChatGPT API page
 
 # Install
 

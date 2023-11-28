@@ -8,7 +8,7 @@ const is_windows = process.platform === 'win32';
 const is_mac = process.platform === 'darwin';
 const is_linux = process.platform === 'linux';
 
-const { app, BrowserWindow, globalShortcut, Menu, Tray, clipboard, screen, shell, ipcMain } = require('electron')
+const { app, BrowserWindow, globalShortcut, Menu, Tray, clipboard, screen, shell, ipcMain, nativeTheme } = require('electron')
 
 const packageJson = require('./package.json');
 const version = packageJson.version;
@@ -30,7 +30,7 @@ function createWindow() {
             sandbox: true
         },
         show: true,
-        icon: path.join(__dirname, 'icons/icon.png'),
+        icon: path.join(__dirname, 'icons/icon_black.png'),
         alwaysOnTop: true
     })
 
@@ -122,7 +122,23 @@ function toggleWindow() {
 }
 
 function createTray() {
-    tray = new Tray(path.join(__dirname, 'icons/icon_trayx16.png'))
+
+    tray = new Tray(path.join(__dirname, './icons/icon_whitex16.png'))
+    // 現時点では自動でダーク・ライトモードの取得に失敗しているので，コメントアウトしておく．
+    // console.log("nativeTheme:", nativeTheme)
+    // if (nativeTheme.shouldUseDarkColors) {
+    //     tray = new Tray(path.join(__dirname, './icons/icon_whitex16.png'))
+    // } else {
+    //     tray = new Tray(path.join(__dirname, './icons/icon_blackx16.png'))
+    // }
+
+    // nativeTheme.on('updated', () => {
+    //     if (nativeTheme.shouldUseDarkColors) {
+    //         tray.setImage('icons/icon_blackx16.png');
+    //     } else {
+    //         tray.setImage('icons/icon_whitex16.png');
+    //     }
+    // });
 
     const contextMenu = Menu.buildFromTemplate([
         {
@@ -133,10 +149,17 @@ function createTray() {
             }
         },
         {
-            label: 'Reload',
-            accelerator: process.platform === 'darwin' ? 'Control+Shift+R' : 'Control+Shift+R',
+            label: 'Load ChatGPT Chat Page',
+            accelerator: process.platform === 'darwin' ? 'Control+Shift+C' : 'Control+Shift+C',
             click: () => {
                 mainWindow.loadURL('https://chat.openai.com/chat')
+            }
+        },
+        {
+            label: 'Load ChatGPT API Page',
+            accelerator: process.platform === 'darwin' ? 'Control+Shift+A' : 'Control+Shift+A',
+            click: () => {
+                mainWindow.loadURL('https://platform.openai.com/')
             }
         },
 
@@ -215,12 +238,21 @@ app.whenReady().then(() => {
         toggleWindow();
     })
 
-    globalShortcut.register('Control+Shift+R', () => {
+    globalShortcut.register('Control+Shift+C', () => {
         if (mainWindow && mainWindow.isDestroyed()) {
             mainWindow = craeteWindow();
         }
         else {
             mainWindow.loadURL('https://chat.openai.com/chat')
+        }
+    })
+
+    globalShortcut.register('Control+Shift+A', () => {
+        if (mainWindow && mainWindow.isDestroyed()) {
+            mainWindow = craeteWindow();
+        }
+        else {
+            mainWindow.loadURL('https://platform.openai.com/')
         }
     })
 })
