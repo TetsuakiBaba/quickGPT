@@ -30,7 +30,7 @@ function createWindow() {
             sandbox: true
         },
         show: true,
-        icon: path.join(__dirname, 'icons/icon_black.png'),
+        icon: path.join(__dirname, 'icons/icon.png'),
         alwaysOnTop: true
     })
 
@@ -123,7 +123,7 @@ function toggleWindow() {
 
 function createTray() {
 
-    tray = new Tray(path.join(__dirname, './icons/icon_whitex16.png'))
+    tray = new Tray(path.join(__dirname, './icons/IconTemplate.png'))
     // 現時点では自動でダーク・ライトモードの取得に失敗しているので，コメントアウトしておく．
     // console.log("nativeTheme:", nativeTheme)
     // if (nativeTheme.shouldUseDarkColors) {
