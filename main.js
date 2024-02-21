@@ -9,13 +9,17 @@ const is_mac = process.platform === 'darwin';
 const is_linux = process.platform === 'linux';
 
 const { app, BrowserWindow, globalShortcut, Menu, Tray, clipboard, screen, shell, ipcMain, nativeTheme } = require('electron')
+const Store = require('electron-store');
+const store = new Store();
 
 const packageJson = require('./package.json');
 const version = packageJson.version;
 
 let mainWindow = null
 
+
 function createWindow() {
+    nativeTheme.themeSource = store.get('theme', 'system');
     const win = new BrowserWindow({
         width: 800,
         height: 600,
@@ -162,8 +166,42 @@ function createTray() {
                 mainWindow.loadURL('https://platform.openai.com/')
             }
         },
-
         { type: 'separator' },
+        // electronでdark, light, systemのテーマを選択設定をするメニュー。ただしmacosだけ
+        {
+            label: 'Theme Mode',
+            submenu: [
+                {
+                    label: 'Dark Theme',
+                    type: 'radio',
+                    checked: store.get('theme', 'system') === 'dark', // 保存された設定を読み込む
+                    click: () => {
+                        nativeTheme.themeSource = 'dark';
+                        store.set('theme', 'dark');
+                    }
+                },
+                {
+                    label: 'Light Theme',
+                    type: 'radio',
+                    checked: store.get('theme', 'system') === 'light', // アプリ起動時のデフォルト設定に基づいて、適宜変更してください。
+                    click: () => {
+                        nativeTheme.themeSource = 'light';
+                        store.set('theme', 'light');
+                    }
+                },
+                {
+                    label: 'System Theme',
+                    type: 'radio',
+                    checked: store.get('theme', 'system') === 'system', // システムのテーマ設定に基づく場合はこちらをtrueにします。
+                    click: () => {
+                        nativeTheme.themeSource = 'system';
+                        store.set('theme', 'system');
+                    }
+                }
+            ]
+        },
+        { type: 'separator' },
+
         {
             label: 'About',
             click: () => {
@@ -234,6 +272,7 @@ app.whenReady().then(() => {
     globalShortcut.register('Control+Shift+G', () => {
         toggleWindow();
     })
+
     globalShortcut.register('Control+Shift+Q', () => {
         toggleWindow();
     })
