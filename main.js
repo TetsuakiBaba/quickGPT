@@ -247,6 +247,8 @@ function createTray() {
 
 
 app.whenReady().then(() => {
+    // Dockからアプリを隠す
+    if (app.dock) app.dock.hide();
     mainWindow = createWindow()
     // let menu = Menu.buildFromTemplate(
     //     [
