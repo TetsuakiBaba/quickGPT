@@ -4,7 +4,7 @@
 
 # QuickGPT
 
-An application that instantly opens open ai chat (chat gpt) on your desktop
+An application that instantly opens open ai chat (chat gpt or custom url) on your desktop
 
  * You can instantly switch between displaying and hiding chats with keyboard shortcuts.
  * The chat window is always displayed on the position of your mouse cursor.
@@ -16,8 +16,6 @@ An application that instantly opens open ai chat (chat gpt) on your desktop
 
 ## Shortcut list
  - Control+Shift+Q: Toggle window display
- - Control+Shift+C: Load ChatGPT Chat page
- - Control+Shift+A: Load ChatGPT API page
 
 # Install
 
