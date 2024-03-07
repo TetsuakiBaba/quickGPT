@@ -1,6 +1,12 @@
 // main.js
 require('update-electron-app')()
 
+// automatic reload electron app when code changes
+require('electron-reload')(__dirname, {
+    electron: require(`${__dirname}/node_modules/electron`)
+});
+
+
 // run this as early in the main process as possible
 if (require('electron-squirrel-startup')) app.quit();
 
@@ -20,6 +26,7 @@ let mainWindow = null
 
 function createWindow() {
     nativeTheme.themeSource = store.get('theme', 'system');
+    console.log("nativeTheme.themeSource:", nativeTheme.themeSource)
     const win = new BrowserWindow({
         width: 800,
         height: 600,
@@ -29,7 +36,7 @@ function createWindow() {
         hasShadow: true,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
-            nodeIntegration: false,
+            nodeIntegration: true,
             contextIsolation: true,
             sandbox: true
         },
@@ -40,7 +47,12 @@ function createWindow() {
 
     // ウィンドウをドラッグして移動できるようにする
     //win.setWindowButtonVisibility(false); // only macos
-    win.loadURL('https://chat.openai.com/chat');
+    // storeでurlが定義されてなければ、デフォルトのurlを開き、urlにはchat.openai.com/chatが入る
+    const url = store.get('url', 'https://chat.openai.com/chat');
+    if (url === undefined) {
+        store.set('url', 'https://chat.openai.com/chat');
+    }
+    win.loadURL(url);
     win.webContents.on('did-finish-load', () => {
         console.log('loaded');
         const textBoxSelector = 'textarea'; // 任意のテキストボックスのセレクターを指定
@@ -152,21 +164,6 @@ function createTray() {
                 toggleWindow();
             }
         },
-        {
-            label: 'Load ChatGPT Chat Page',
-            accelerator: process.platform === 'darwin' ? 'Control+Shift+C' : 'Control+Shift+C',
-            click: () => {
-                mainWindow.loadURL('https://chat.openai.com/chat')
-            }
-        },
-        {
-            label: 'Load ChatGPT API Page',
-            accelerator: process.platform === 'darwin' ? 'Control+Shift+A' : 'Control+Shift+A',
-            click: () => {
-                mainWindow.loadURL('https://platform.openai.com/')
-            }
-        },
-        { type: 'separator' },
         // electronでdark, light, systemのテーマを選択設定をするメニュー。ただしmacosだけ
         {
             label: 'Theme Mode',
@@ -199,6 +196,43 @@ function createTray() {
                     }
                 }
             ]
+        },
+        {
+            label: 'Settings',
+            click: () => {
+                //mainWindow.loadFile(path.join(__dirname, 'about.html'));
+                const mainWindowSize = mainWindow.getSize();
+                const mainWindowPos = mainWindow.getPosition();
+
+                const aboutWindowWidth = 600;
+                const aboutWindowHeight = 500;
+
+                const aboutWindowPosX = mainWindowPos[0] + (mainWindowSize[0] - aboutWindowWidth) / 2;
+                const aboutWindowPosY = mainWindowPos[1] + (mainWindowSize[1] - aboutWindowHeight) / 2;
+
+                let win = new BrowserWindow({
+                    title: "settings",
+                    width: aboutWindowWidth,
+                    height: aboutWindowHeight,
+                    x: aboutWindowPosX,
+                    y: aboutWindowPosY,
+                    hasShadow: true,
+                    alwaysOnTop: true,
+                    resizable: true,
+                    frame: false,
+                    webPreferences: {
+                        preload: path.join(__dirname, 'settings.js'),
+                        nodeIntegration: true,
+                        contextIsolation: true
+                    }
+                });
+
+                win.loadFile(path.join(__dirname, `settings.html`)).then(() => {
+                    win.webContents.executeJavaScript(`setVersion("${version}");`, true)
+                        .then(result => {
+                        }).catch(console.error);
+                });
+            }
         },
         { type: 'separator' },
 
@@ -238,6 +272,7 @@ function createTray() {
                 });
             }
         },
+
         { role: 'quit' }
     ])
 

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link href="bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container-sm mt-5">
+        <div class="row">
+            <!-- <div class="mt-5" style="text-align:center;">
+                <img src="icons/icon_black.png" alt="icon" style="width: 30%;">
+            </div> -->
+            <div class="col-12">
+                <h1 class="display-1">Settings
+                    <span class="text-muted fs-5" id="version"></span>
+                </h1>
+
+            </div>
+            <div class="col-12">
+                <div class="form-floating mb-3">
+                    <input type="url" class="form-control" id="input_url" placeholder="https://chat.openai.com/chat"
+                        value="https://chat.openai.com/chat">
+                    <label for="input_url">Access URL</label>
+                </div>
+            </div>
+            <div class="col-12 mb-3">
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-end">
+                    <button class="btn btn-secondary me-sm-2" type="button" onclick="window.close()">Cancel</button>
+                    <button class="btn btn-primary" type="button" onclick="saveURL.call(this);">Save</button>
+                </div>
+            </div>
+            <div class="col-12 mb-3">
+
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-end">
+                    <div class="alert alert-danger" role="alert">
+                        <span>All settings will be clear</span>
+                        <button class="ms-2 btn btn-danger " type="button" onclick="reset()">Reset</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <hr>
+            <p class="small text-muted text-center">QuickGPT &copy; 2024 Tetsuaki Baba</p>
+        </div>
+
+    </div>
+    <script>
+
+
+        function setVersion(version) {
+            document.querySelector('#version').textContent = version;
+        }
+        function saveURL() {
+            electronStore.set('url', document.querySelector('#input_url').value);
+            // input_url のボタンを success にして、文字をsavedに変更。3秒後に戻る
+            this.textContent = 'Saved';
+            this.classList.remove('btn-primary');
+            this.classList.add('btn-success');
+            setTimeout(() => {
+                this.textContent = 'Save';
+                this.classList.remove('btn-success');
+                this.classList.add('btn-primary');
+            }, 3000);
+
+        }
+
+        function reset() {
+            if (window.confirm('Are you sure you want to reset?')) {
+                electronStore.clear();
+            }
+            document.querySelector('#input_url').value = 'https://chat.openai.com/chat';
+            electronStore.set('url', 'https://chat.openai.com/chat');
+
+        }
+        window.addEventListener('load', function () {
+            document.querySelector('#input_url').value = electronStore.get('url');
+        });
+
+
+    </script>
+</body>
+
+</html>
