@@ -6,10 +6,9 @@
 
 An application that instantly opens open ai chat (chat gpt or custom url) on your desktop
 
- * You can instantly switch between displaying and hiding chats with keyboard shortcuts.
- * The chat window is always displayed on the position of your mouse cursor.
- * When switching between views, the input prompt is automatically activated so that you can enter text immediately.
- * Chat is never sent by pressing the confirm enter button for Japanese conversion, etc.
+ * Quick-1: You can instantly switch between displaying and hiding chats with keyboard shortcuts.
+ * Quick-2: The chat window is always displayed on the position(mouse, display center, last position) where you want.
+ * Quick-3: When switching between views, the input prompt is automatically activated so that you can enter text immediately.
 
 
 ![](./teaser.png)![](./settings.png)
