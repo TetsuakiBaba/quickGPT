@@ -29,7 +29,7 @@ An application that instantly opens open ai chat (chat gpt or custom url) on you
  - Control+Shift+1,2,3: Change the chat window
 
 
-# Install ( for developer )
+# Installation
 ## macOS, Windows
 A binary package is available for users on macOS. Please download the latest version of the zip file from the link below.
  * https://github.com/TetsuakiBaba/quickGPT/releases
