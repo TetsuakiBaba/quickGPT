@@ -1,6 +1,6 @@
 {
-  "name": "QuickGPT",
-  "version": "1.2.0",
+  "name": "Quick-GPT",
+  "version": "1.2.1",
   "description": "quick access to openai chat.",
   "main": "main.js",
   "scripts": {
@@ -21,21 +21,24 @@
   },
   "homepage": "https://github.com/TetsuakiBaba/quickGPT#readme",
   "devDependencies": {
-    "@electron-forge/cli": "^6.1.1",
-    "@electron-forge/maker-deb": "^6.1.1",
-    "@electron-forge/maker-dmg": "^6.4.2",
-    "@electron-forge/maker-rpm": "^6.1.1",
-    "@electron-forge/maker-squirrel": "^6.4.2",
-    "@electron-forge/maker-zip": "^6.1.1",
-    "@electron-forge/publisher-github": "^6.1.1",
-    "electron": "24.0.0"
+    "@electron-forge/cli": "^7.3.0",
+    "@electron-forge/maker-deb": "^7.3.0",
+    "@electron-forge/maker-dmg": "^7.3.0",
+    "@electron-forge/maker-rpm": "^7.3.0",
+    "@electron-forge/maker-squirrel": "^7.3.0",
+    "@electron-forge/maker-zip": "^7.3.0",
+    "@electron-forge/publisher-github": "^7.3.0",
+    "electron": "^29.1.0"
   },
   "dependencies": {
-    "@electron-forge/plugin-auto-unpack-natives": "^6.4.2",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.3.0",
+    "bootstrap": "^5.3.3",
+    "electron": "^29.1.0",
     "electron-drag": "^2.0.0",
     "electron-reload": "^2.0.0-alpha.1",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.1.0",
-    "update-electron-app": "^2.0.1"
+    "osx-mouse": "^2.0.0",
+    "update-electron-app": "^3.0.0"
   }
 }

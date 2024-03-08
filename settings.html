@@ -4,13 +4,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap demo</title>
-    <link href="bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <title>QuickGTP Settings</title>
+    <link href="./bootstrap.min.css" rel="stylesheet">
+    </link>
 </head>
 
 <body>
     <div class="container-sm mt-5">
+
         <div class="row">
             <!-- <div class="mt-5" style="text-align:center;">
                 <img src="icons/icon_black.png" alt="icon" style="width: 30%;">
@@ -23,9 +24,16 @@
             </div>
             <div class="col-12">
                 <div class="form-floating mb-3">
-                    <input type="url" class="form-control" id="input_url" placeholder="https://chat.openai.com/chat"
-                        value="https://chat.openai.com/chat">
+                    <input type="url" class="form-control" id="input_url" placeholder="https://chat.openai.com/"
+                        value="https://chat.openai.com/">
                     <label for="input_url">Access URL</label>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="form-floating mb-3">
+                    <input type="url" class="form-control" id="input_shortcut" placeholder="Control+Shift+Q"
+                        value="Control+Shift+Q" disabled>
+                    <label for="input_url">Shortcut key for toggling visibility</label>
                 </div>
             </div>
             <div class="col-12 mb-3">
@@ -82,6 +90,63 @@
             document.querySelector('#input_url').value = electronStore.get('url');
         });
 
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                // ユーザーがダークモードを選択した場合の処理
+                document.body.classList.add('dark-mode');
+            } else {
+                // ユーザーがライトモードを選択した場合の処理
+                document.body.classList.remove('dark-mode');
+            }
+        });
+
+        // ダークモードの設定を監視し、変更があった場合に実行する関数
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                // システムテーマがダークモードの場合
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            } else {
+                // システムテーマがライトモードの場合
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+            }
+        });
+
+        // ページロード時にもシステムテーマに応じてテーマを設定
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-bs-theme', 'light');
+        }
+
+        // ショートカット入力フィールドの参照
+        const input = document.getElementById('input_shortcut');
+
+
+
+        // キー入力を検出して入力フィールドに表示
+        input.addEventListener('keydown', function (event) {
+            event.preventDefault(); // デフォルトのキーイベントを防ぐ
+
+            // 修飾キーのみが押された場合は無視（組み合わせに含めない）
+            if (event.key === "Control" || event.key === "Shift" || event.key === "Alt" || event.key === "Meta") {
+                return; // 修飾キーのみの場合は何もしない
+            }
+
+            // 押された修飾キーと通常のキーを識別
+            const ctrlKey = event.ctrlKey ? "Control+" : "";
+            const shiftKey = event.shiftKey ? "Shift+" : "";
+            const altKey = event.altKey ? "Alt+" : "";
+            const metaKey = event.metaKey ? "Command+" : ""; // macOSのコマンドキー
+            const key = event.key === " " ? "Space" : event.key; // スペースキーの識別
+
+            // キーの組み合わせを作成
+            const combination = `${ctrlKey}${shiftKey}${altKey}${metaKey}${key}`;
+
+            // 組み合わせを入力フィールドに表示
+            this.value = combination;
+
+            // TODO: ショートカットをlocalStorageに保存するなどの処理を追加
+        });
 
     </script>
 </body>

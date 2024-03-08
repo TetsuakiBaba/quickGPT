@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Bootstrap demo</title>
-    <link href="bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <link href="bootstrap.min.css" rel="stylesheet">
+
 </head>
 
 <body>
@@ -25,6 +25,24 @@
 
         function setVersion(version) {
             document.querySelector('#version').textContent = version;
+        }
+
+        // ダークモードの設定を監視し、変更があった場合に実行する関数
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                // システムテーマがダークモードの場合
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            } else {
+                // システムテーマがライトモードの場合
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+            }
+        });
+
+        // ページロード時にもシステムテーマに応じてテーマを設定
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-bs-theme', 'light');
         }
     </script>
 </body>

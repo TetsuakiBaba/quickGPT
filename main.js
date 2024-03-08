@@ -1,10 +1,10 @@
 // main.js
-require('update-electron-app')()
+
 
 // automatic reload electron app when code changes
-require('electron-reload')(__dirname, {
-    electron: require(`${__dirname}/node_modules/electron`)
-});
+// require('electron-reload')(__dirname, {
+//     electron: require(`${__dirname}/node_modules/electron`)
+// });
 
 
 // run this as early in the main process as possible
@@ -23,10 +23,11 @@ const version = packageJson.version;
 
 let mainWindow = null
 
+const { updateElectronApp } = require('update-electron-app')
+updateElectronApp()
 
 function createWindow() {
     nativeTheme.themeSource = store.get('theme', 'system');
-    console.log("nativeTheme.themeSource:", nativeTheme.themeSource)
     const win = new BrowserWindow({
         width: 800,
         height: 600,
@@ -36,9 +37,9 @@ function createWindow() {
         hasShadow: true,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
-            nodeIntegration: true,
+            nodeIntegration: false,
             contextIsolation: true,
-            sandbox: true
+            sandbox: false
         },
         show: true,
         icon: path.join(__dirname, 'icons/icon.png'),
@@ -48,9 +49,9 @@ function createWindow() {
     // ウィンドウをドラッグして移動できるようにする
     //win.setWindowButtonVisibility(false); // only macos
     // storeでurlが定義されてなければ、デフォルトのurlを開き、urlにはchat.openai.com/chatが入る
-    const url = store.get('url', 'https://chat.openai.com/chat');
+    const url = store.get('url', 'https://chat.openai.com/');
     if (url === undefined) {
-        store.set('url', 'https://chat.openai.com/chat');
+        store.set('url', 'https://chat.openai.com/');
     }
     win.loadURL(url);
     win.webContents.on('did-finish-load', () => {
@@ -159,7 +160,7 @@ function createTray() {
     const contextMenu = Menu.buildFromTemplate([
         {
             label: 'Toggle Visibility',
-            accelerator: process.platform === 'darwin' ? 'Control+Shift+Q' : 'Control+Shift+Q',
+            // accelerator: process.platform === 'darwin' ? 'Control+Shift+Q' : 'Control+Shift+Q',
             click: () => {
                 toggleWindow();
             }
@@ -219,10 +220,10 @@ function createTray() {
                     hasShadow: true,
                     alwaysOnTop: true,
                     resizable: true,
-                    frame: false,
+                    frame: true,
                     webPreferences: {
                         preload: path.join(__dirname, 'settings.js'),
-                        nodeIntegration: true,
+                        nodeIntegration: false,
                         contextIsolation: true
                     }
                 });
@@ -306,31 +307,16 @@ app.whenReady().then(() => {
         }
     })
 
-    globalShortcut.register('Control+Shift+G', () => {
+
+    const shortcut_toggle = store.get('shortcut_toggle', 'Control+Shift+Q');
+    if (shortcut_toggle === undefined) {
+        store.set('shortcut_toggle', 'Control+Shift+Q');
+        shortcut_toggle = 'Control+Shift+Q';
+    }
+    globalShortcut.register(shortcut_toggle, () => {
         toggleWindow();
     })
 
-    globalShortcut.register('Control+Shift+Q', () => {
-        toggleWindow();
-    })
-
-    globalShortcut.register('Control+Shift+C', () => {
-        if (mainWindow && mainWindow.isDestroyed()) {
-            mainWindow = craeteWindow();
-        }
-        else {
-            mainWindow.loadURL('https://chat.openai.com/chat')
-        }
-    })
-
-    globalShortcut.register('Control+Shift+A', () => {
-        if (mainWindow && mainWindow.isDestroyed()) {
-            mainWindow = craeteWindow();
-        }
-        else {
-            mainWindow.loadURL('https://platform.openai.com/')
-        }
-    })
 })
 
 app.on('window-all-closed', function () {
