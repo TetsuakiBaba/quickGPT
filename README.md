@@ -12,13 +12,25 @@ An application that instantly opens open ai chat (chat gpt or custom url) on you
  * Chat is never sent by pressing the confirm enter button for Japanese conversion, etc.
 
 
-![](./teaser.png)
+![](./teaser.png)![](./settings.png)
+
+## Usage
+### 0. download
+ - Download the latest version from the link below.
+   * https://github.com/TetsuakiBaba/quickGPT/releases
+### 1. Show/Hide the chat window
+ - Press Control+Shift+Q to show/hide the chat window.
+ - If you want to open a custom chat, you can open it by entering the URL in the settings.
+### 2. Switch the chat window
+ - Press Control+Shift+1,2,3 to switch the chat window.
+  - If you want to switch to a custom chat, you can switch it by entering the URL in the settings.
 
 ## Shortcut list
  - Control+Shift+Q: Toggle window display
+ - Control+Shift+1,2,3: Change the chat window
 
-# Install
 
+# Install ( for developer )
 ## macOS, Windows
 A binary package is available for users on macOS. Please download the latest version of the zip file from the link below.
  * https://github.com/TetsuakiBaba/quickGPT/releases

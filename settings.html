@@ -11,7 +11,9 @@
 
 <body>
     <div class="container-sm mt-5">
-
+        <div class="d-grid gap-2 d-flex justify-content-end">
+            <button type="button" class="fs-2 btn-close" aria-label="Close" onclick="window.close()"></button>
+        </div>
         <div class="row">
             <!-- <div class="mt-5" style="text-align:center;">
                 <img src="icons/icon_black.png" alt="icon" style="width: 30%;">
@@ -24,33 +26,58 @@
             </div>
             <div class="col-12">
                 <div class="form-floating mb-3">
-                    <input type="url" class="form-control" id="input_url" placeholder="https://chat.openai.com/"
+                    <input type="url" class="form-control" id="input_url_1" placeholder="https://chat.openai.com/"
                         value="https://chat.openai.com/">
-                    <label for="input_url">Access URL</label>
+                    <label for="input_url_1">Access URL 1 (Default): Control+Shift+1</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="url" class="form-control" id="input_url_2" placeholder="https://www.bing.com/chat"
+                        value="https://www.bing.com/chat">
+                    <label for="input_url_2">Access URL 2: Control+Shift+2</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="url" class="form-control" id="input_url_3" placeholder="https://claude.ai/chats"
+                        value="https://claude.ai/chats">
+                    <label for="input_url_3">Access URL 3: Control+Shift+3</label>
                 </div>
             </div>
             <div class="col-12">
                 <div class="form-floating mb-3">
                     <input type="url" class="form-control" id="input_shortcut" placeholder="Control+Shift+Q"
-                        value="Control+Shift+Q" disabled>
+                        value="Control+Shift+Q">
                     <label for="input_url">Shortcut key for toggling visibility</label>
                 </div>
             </div>
+            <div class="col-12" id="visibility_position">
+                <div class="alert alert-light" role="alert">
+                    <div class="mb-2 small text-muted">When Visibility is toggled, which position the window will be
+                        displayed
+                        in.</div>
+                    <input type="radio" class="btn-check" name="options-base" id="vp_mouse" autocomplete="off" checked>
+                    <label class="btn" for="vp_mouse">Mouse Position
+                    </label>
+
+                    <input type="radio" class="btn-check" name="options-base" id="vp_center" autocomplete="off">
+                    <label class="btn" for="vp_center">Display Center</label>
+
+                    <input type="radio" class="btn-check" name="options-base" id="vp_same" autocomplete="off">
+                    <label class="btn" for="vp_same">Same as Before</label>
+                </div>
+
+            </div>
             <div class="col-12 mb-3">
-                <div class="d-grid gap-2 d-sm-flex justify-content-sm-end">
+                <div class="d-grid gap-2 d-flex justify-content-end">
                     <button class="btn btn-secondary me-sm-2" type="button" onclick="window.close()">Cancel</button>
-                    <button class="btn btn-primary" type="button" onclick="saveURL.call(this);">Save</button>
+                    <button class="btn btn-primary" type="button" onclick="save.call(this);">Save</button>
                 </div>
             </div>
             <div class="col-12 mb-3">
-
-                <div class="d-grid gap-2 d-sm-flex justify-content-sm-end">
+                <div class="d-grid gap-2 d-flex justify-content-end">
                     <div class="alert alert-danger" role="alert">
-                        <span>All settings will be clear</span>
+                        <span>All settings are set to their default values</span>
                         <button class="ms-2 btn btn-danger " type="button" onclick="reset()">Reset</button>
                     </div>
                 </div>
-
             </div>
 
             <hr>
@@ -64,8 +91,14 @@
         function setVersion(version) {
             document.querySelector('#version').textContent = version;
         }
-        function saveURL() {
-            electronStore.set('url', document.querySelector('#input_url').value);
+        function save() {
+            electronStore.set('url_1', document.querySelector('#input_url_1').value);
+            electronStore.set('url_2', document.querySelector('#input_url_2').value);
+            electronStore.set('url_3', document.querySelector('#input_url_3').value);
+            electronStore.set('shortcut_toggle', document.querySelector('#input_shortcut').value);
+            const visibility_position = document.querySelector('input[name="options-base"]:checked').id.split('_')[1];
+            electronStore.set('visibility_position', visibility_position);
+            console.log(visibility_position);
             // input_url のボタンを success にして、文字をsavedに変更。3秒後に戻る
             this.textContent = 'Saved';
             this.classList.remove('btn-primary');
@@ -78,16 +111,61 @@
 
         }
 
+        const url_defaults = [
+            'https://chat.openai.com/chat',
+            'https://www.bing.com/chat',
+            'https://claude.ai/chats'];
+
         function reset() {
             if (window.confirm('Are you sure you want to reset?')) {
-                electronStore.clear();
-            }
-            document.querySelector('#input_url').value = 'https://chat.openai.com/chat';
-            electronStore.set('url', 'https://chat.openai.com/chat');
+                document.querySelector('#input_url_1').value = 'https://chat.openai.com/chat';
+                electronStore.set('url_1', 'https://chat.openai.com/chat');
+                document.querySelector('#input_url_2').value = 'https://www.bing.com/chat';
+                electronStore.set('url_2', 'https://www.bing.com/chat');
+                document.querySelector('#input_url_3').value = 'https://claude.ai/chats';
+                electronStore.set('url_3', 'https://claude.ai/chats');
 
+                electronStore.set('shortcut_toggle', 'Control+Shift+Q');
+                document.querySelector('#input_shortcut').value = 'Control+Shift+Q';
+
+                electronStore.set('visibility_position', 'mouse');
+                document.querySelector('#vp_mouse').checked = true;
+
+            }
+        }
+
+        function loadValues() {
+            for (let i = 1; i <= url_defaults.length; i++) {
+                if (electronStore.get('url_' + i) === undefined) {
+                    console.log(electronStore.get(`url_${i}`));
+                    electronStore.set(`url_${i}`, url_defaults[i - 1]);
+                }
+            }
+            if (electronStore.get('shortcut_toggle') === undefined) {
+                electronStore.set('shortcut_toggle', 'Control+Shift+Q');
+            }
+            document.querySelector('#input_url_1').value = electronStore.get('url_1');
+            document.querySelector('#input_url_2').value = electronStore.get('url_2');
+            document.querySelector('#input_url_3').value = electronStore.get('url_3');
+            document.querySelector('#input_shortcut').value = electronStore.get('shortcut_toggle');
+
+            // visibility_position
+            const visibility_position = electronStore.get('visibility_position');
+            if (visibility_position === undefined) {
+                electronStore.set('visibility_position', 'mouse');
+                document.querySelector('#vp_mouse').checked = true;
+            } else {
+                if (visibility_position === 'mouse') {
+                    document.querySelector('#vp_mouse').checked = true;
+                } else if (visibility_position === 'center') {
+                    document.querySelector('#vp_center').checked = true;
+                } else if (visibility_position === 'same') {
+                    document.querySelector('#vp_same').checked = true;
+                }
+            }
         }
         window.addEventListener('load', function () {
-            document.querySelector('#input_url').value = electronStore.get('url');
+            loadValues();
         });
 
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {

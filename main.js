@@ -26,6 +26,22 @@ let mainWindow = null
 const { updateElectronApp } = require('update-electron-app')
 updateElectronApp()
 
+ipcMain.on('set-url', (event, url) => {
+    console.log('set-url', url);
+    mainWindow.loadURL(url);
+    // 他のメインウィンドウ操作
+});
+ipcMain.on('set-shortcut', (event, value, old_shortcut) => {
+    console.log('set-shortcut', value, old_shortcut);
+    if (globalShortcut.isRegistered(old_shortcut)) {
+        globalShortcut.unregister(old_shortcut);
+    }
+    globalShortcut.register(value, () => {
+        toggleWindow();
+    });
+    // 他のメインウィンドウ操作
+});
+
 function createWindow() {
     nativeTheme.themeSource = store.get('theme', 'system');
     const win = new BrowserWindow({
@@ -122,9 +138,25 @@ function toggleWindow() {
         if (mainWindow.isVisible()) {
             mainWindow.hide();
         } else {
-            // マウスポインタの現在の位置を取得
-            const { x, y } = screen.getCursorScreenPoint();
-            mainWindow.setPosition(x, y);
+            const vp = store.get('visibility_position', 'mouse');
+            console.log(vp);
+            if (vp === 'mouse') {
+                // マウスポインタの現在の位置を取得
+                const { x, y } = screen.getCursorScreenPoint();
+                mainWindow.setPosition(x, y);
+            }
+            else if (vp === 'center') {
+                // ウィンドウをdisplayの中央に配置
+                const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+                const mainWindowSize = mainWindow.getSize();
+                mainWindow.setPosition(
+                    parseInt(width / 2) - parseInt(mainWindowSize[0] / 2),
+                    parseInt(height / 2) - parseInt(mainWindowSize[1] / 2)
+                );
+            }
+            else if (vp === 'same') {
+                // 前回と同じでよければ何もしない
+            }
 
             mainWindow.show();
             mainWindow.on('show', () => {
@@ -206,7 +238,7 @@ function createTray() {
                 const mainWindowPos = mainWindow.getPosition();
 
                 const aboutWindowWidth = 600;
-                const aboutWindowHeight = 500;
+                const aboutWindowHeight = 800;
 
                 const aboutWindowPosX = mainWindowPos[0] + (mainWindowSize[0] - aboutWindowWidth) / 2;
                 const aboutWindowPosY = mainWindowPos[1] + (mainWindowSize[1] - aboutWindowHeight) / 2;
@@ -219,11 +251,11 @@ function createTray() {
                     y: aboutWindowPosY,
                     hasShadow: true,
                     alwaysOnTop: true,
-                    resizable: true,
-                    frame: true,
+                    resizable: false,
+                    frame: false,
                     webPreferences: {
                         preload: path.join(__dirname, 'settings.js'),
-                        nodeIntegration: false,
+                        nodeIntegration: true,
                         contextIsolation: true
                     }
                 });
@@ -285,7 +317,7 @@ function createTray() {
 app.whenReady().then(() => {
     // Dockからアプリを隠す
     if (app.dock) app.dock.hide();
-    mainWindow = createWindow()
+    global.mainWindow = mainWindow = createWindow()
     // let menu = Menu.buildFromTemplate(
     //     [
     //         {
@@ -307,6 +339,23 @@ app.whenReady().then(() => {
         }
     })
 
+
+    globalShortcut.register('Control+Shift+1', () => {
+        const url_1 = store.get('url_1', 'https://chat.openai.com/');
+        mainWindow.loadURL(url_1);
+    })
+
+
+    globalShortcut.register('Control+Shift+2', () => {
+        const url_2 = store.get('url_2', 'https://www.bing.com/chat');
+        mainWindow.loadURL(url_2);
+    })
+
+
+    globalShortcut.register('Control+Shift+3', () => {
+        const url_3 = store.get('url_3', 'https://claude.ai/chats');
+        mainWindow.loadURL(url_3);
+    })
 
     const shortcut_toggle = store.get('shortcut_toggle', 'Control+Shift+Q');
     if (shortcut_toggle === undefined) {
