@@ -44,8 +44,10 @@ ipcMain.on('set-shortcut', (event, value, old_shortcut) => {
 
 function createWindow() {
     nativeTheme.themeSource = store.get('theme', 'system');
+    const isDualView = store.get('dual_view', false);
+    
     const win = new BrowserWindow({
-        width: 800,
+        width: isDualView ? 1600 : 800, // dual viewの場合は幅を広げる
         height: 600,
         frame: true,
         titleBarOverlay: true,
@@ -55,7 +57,8 @@ function createWindow() {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
             contextIsolation: true,
-            sandbox: false
+            sandbox: false,
+            webviewTag: true // webviewタグを有効にする
         },
         show: true,
         icon: path.join(__dirname, 'icons/icon.png'),
@@ -64,22 +67,78 @@ function createWindow() {
 
     // ウィンドウをドラッグして移動できるようにする
     //win.setWindowButtonVisibility(false); // only macos
-    // storeでurlが定義されてなければ、デフォルトのurlを開き、urlにはchat.openai.com/chatが入る
-    const url = store.get('url', 'https://chat.openai.com/');
-    if (url === undefined) {
-        store.set('url', 'https://chat.openai.com/');
+    
+    // dual viewの設定に基づいてHTMLファイルを読み込む
+    if (isDualView) {
+        win.loadFile(path.join(__dirname, 'dual-view.html')).then(() => {
+            // dual-view.htmlが読み込まれた後に初期URLを設定
+            setTimeout(() => {
+                const defaultUrl = store.get('url_1', 'https://chat.openai.com/');
+                win.webContents.executeJavaScript(`
+                    (() => {
+                        try {
+                            console.log('Setting initial URLs for dual view on startup');
+                            // webviewが準備できるまで待機
+                            const webview1 = document.getElementById('webview1');
+                            const webview2 = document.getElementById('webview2');
+                            
+                            if (webview1 && webview2) {
+                                // webviewが準備完了してからURL設定
+                                const setUrlSafely = (webview, url, name) => {
+                                    if (webview.src !== url) {
+                                        webview.src = url;
+                                        console.log(name + ' URL set to:', url);
+                                    }
+                                };
+                                
+                                setUrlSafely(webview1, '${defaultUrl}', 'webview1');
+                                setUrlSafely(webview2, '${defaultUrl}', 'webview2');
+                                
+                                return 'startup URLs set successfully';
+                            } else {
+                                console.warn('Webviews not ready yet');
+                                return 'webviews not ready';
+                            }
+                        } catch (error) {
+                            console.error('Error setting startup URLs:', error);
+                            return 'error: ' + error.message;
+                        }
+                    })();
+                `).then(result => {
+                    console.log('Startup URL setting result:', result);
+                }).catch(err => {
+                    console.error('Failed to set startup URLs:', err);
+                });
+            }, 1500); // 待機時間を延長
+        });
+    } else {
+        win.loadFile(path.join(__dirname, 'single-view.html')).then(() => {
+            // single-view.htmlが読み込まれた後に初期URLを設定
+            setTimeout(() => {
+                const defaultUrl = store.get('url_1', 'https://chat.openai.com/');
+                win.webContents.executeJavaScript(`
+                    (() => {
+                        try {
+                            const mainWebview = document.getElementById('mainWebview');
+                            if (mainWebview && mainWebview.src !== '${defaultUrl}') {
+                                mainWebview.src = '${defaultUrl}';
+                                console.log('Single view URL set to stored URL:', '${defaultUrl}');
+                            }
+                            return 'single view URL updated';
+                        } catch (error) {
+                            console.error('Error setting single view URL:', error);
+                            return 'error: ' + error.message;
+                        }
+                    })();
+                `);
+            }, 800); // 待機時間を調整
+        });
     }
-    win.loadURL(url);
+    
     win.webContents.on('did-finish-load', () => {
-        console.log('loaded');
-        const textBoxSelector = 'textarea'; // 任意のテキストボックスのセレクターを指定
-        win.webContents.executeJavaScript(`
-            const textBox = document.querySelector('${textBoxSelector}');
-            if (textBox) {
-              textBox.focus();
-            }
-          `);
+        console.log(isDualView ? 'dual-view loaded' : 'single-view loaded');
     });
+    
     // 以下を追加
     win.webContents.setWindowOpenHandler(({ url }) => {
         if (url.startsWith('http')) {
@@ -161,10 +220,38 @@ function toggleWindow() {
             mainWindow.show();
             mainWindow.on('show', () => {
                 mainWindow.focus();
-                const textBoxSelector = 'textarea'; // 任意のテキストボックスのセレクターを指定
-                mainWindow.webContents.executeJavaScript(`
-                document.querySelector('${textBoxSelector}').focus();
-          `);
+                const isDualView = store.get('dual_view', false);
+                if (isDualView) {
+                    // dual-viewの場合は左側のwebviewにフォーカス
+                    mainWindow.webContents.executeJavaScript(`
+                        setTimeout(() => {
+                            const webview1 = document.getElementById('webview1');
+                            if (webview1) {
+                                webview1.executeJavaScript(\`
+                                    const textBox = document.querySelector('textarea');
+                                    if (textBox) {
+                                        textBox.focus();
+                                    }
+                                \`);
+                            }
+                        }, 500);
+                    `);
+                } else {
+                    // single-viewの場合はメインwebviewにフォーカス
+                    mainWindow.webContents.executeJavaScript(`
+                        setTimeout(() => {
+                            const mainWebview = document.getElementById('mainWebview');
+                            if (mainWebview) {
+                                mainWebview.executeJavaScript(\`
+                                    const textBox = document.querySelector('textarea');
+                                    if (textBox) {
+                                        textBox.focus();
+                                    }
+                                \`);
+                            }
+                        }, 500);
+                    `);
+                }
             });
         }
     }
@@ -229,6 +316,138 @@ function createTray() {
                     }
                 }
             ]
+        },
+        {
+            label: 'Dual View',
+            type: 'checkbox',
+            checked: store.get('dual_view', false),
+            click: () => {
+                const currentDualView = store.get('dual_view', false);
+                const newDualView = !currentDualView;
+                store.set('dual_view', newDualView);
+                
+                console.log(`Switching to ${newDualView ? 'dual' : 'single'} view`);
+                
+                if (newDualView) {
+                    // single viewからdual viewに切り替え
+                    let currentUrl = 'https://chat.openai.com/';
+                    
+                    // 現在のURLを取得を試みる
+                    mainWindow.webContents.executeJavaScript(`
+                        (() => {
+                            try {
+                                const mainWebview = document.getElementById('mainWebview');
+                                return mainWebview ? mainWebview.src : 'https://chat.openai.com/';
+                            } catch (error) {
+                                console.error('Error getting current URL:', error);
+                                return 'https://chat.openai.com/';
+                            }
+                        })();
+                    `).then(url => {
+                        currentUrl = url || 'https://chat.openai.com/';
+                        console.log('Current single view URL:', currentUrl);
+                        
+                        // ウィンドウサイズを変更
+                        mainWindow.setSize(1600, 600);
+                        
+                        // dual-view.htmlを読み込み
+                        mainWindow.loadFile(path.join(__dirname, 'dual-view.html')).then(() => {
+                            console.log('dual-view.html loaded successfully');
+                            // HTMLファイルが完全に読み込まれてからURLを設定
+                            setTimeout(() => {
+                                mainWindow.webContents.executeJavaScript(`
+                                    (() => {
+                                        try {
+                                            console.log('Setting URLs for dual view');
+                                            const webview1 = document.getElementById('webview1');
+                                            const webview2 = document.getElementById('webview2');
+                                            
+                                            if (webview1 && webview2) {
+                                                // URLが異なる場合のみ設定
+                                                if (webview1.src !== '${currentUrl}') {
+                                                    webview1.src = '${currentUrl}';
+                                                    console.log('webview1 URL set to:', '${currentUrl}');
+                                                }
+                                                if (webview2.src !== '${currentUrl}') {
+                                                    webview2.src = '${currentUrl}';
+                                                    console.log('webview2 URL set to:', '${currentUrl}');
+                                                }
+                                                return 'success';
+                                            } else {
+                                                console.warn('Webviews not found');
+                                                return 'webviews not found';
+                                            }
+                                        } catch (error) {
+                                            console.error('Error setting dual view URLs:', error);
+                                            return 'error: ' + error.message;
+                                        }
+                                    })();
+                                `).then(result => {
+                                    console.log('URL setting result:', result);
+                                }).catch(err => {
+                                    console.error('Failed to set URLs:', err);
+                                });
+                            }, 1500); // 待機時間を延長
+                        }).catch(error => {
+                            console.error('Failed to load dual-view.html:', error);
+                        });
+                    }).catch(error => {
+                        console.error('Error getting current URL, using default:', error);
+                        // エラーの場合はデフォルトURLでdual-view.htmlを読み込み
+                        mainWindow.setSize(1600, 600);
+                        mainWindow.loadFile(path.join(__dirname, 'dual-view.html'));
+                    });
+                } else {
+                    // dual viewからsingle viewに切り替え
+                    let leftViewUrl = 'https://chat.openai.com/';
+                    
+                    mainWindow.webContents.executeJavaScript(`
+                        (() => {
+                            try {
+                                const webview1 = document.getElementById('webview1');
+                                return webview1 ? webview1.src : 'https://chat.openai.com/';
+                            } catch (error) {
+                                console.error('Error getting left view URL:', error);
+                                return 'https://chat.openai.com/';
+                            }
+                        })();
+                    `).then(url => {
+                        leftViewUrl = url || 'https://chat.openai.com/';
+                        console.log('Left view URL:', leftViewUrl);
+                        
+                        // ウィンドウサイズを変更
+                        mainWindow.setSize(800, 600);
+                        
+                        // single-view.htmlを読み込み、left viewのURLを設定
+                        mainWindow.loadFile(path.join(__dirname, 'single-view.html')).then(() => {
+                            setTimeout(() => {
+                                mainWindow.webContents.executeJavaScript(`
+                                    (() => {
+                                        try {
+                                            const mainWebview = document.getElementById('mainWebview');
+                                            if (mainWebview) {
+                                                mainWebview.src = '${leftViewUrl}';
+                                                console.log('Single view URL set to:', '${leftViewUrl}');
+                                            }
+                                            return 'success';
+                                        } catch (error) {
+                                            console.error('Error setting single view URL:', error);
+                                            return 'error: ' + error.message;
+                                        }
+                                    })();
+                                `);
+                            }, 500);
+                        });
+                    }).catch(error => {
+                        console.error('Error getting left view URL, using default:', error);
+                        // エラーの場合はデフォルトで読み込み
+                        mainWindow.setSize(800, 600);
+                        mainWindow.loadFile(path.join(__dirname, 'single-view.html'));
+                    });
+                }
+                
+                console.log(`Dual view ${newDualView ? 'enabled' : 'disabled'}`);
+            }
         },
         {
             label: 'Settings',
@@ -342,19 +561,124 @@ app.whenReady().then(() => {
 
     globalShortcut.register('Control+Shift+1', () => {
         const url_1 = store.get('url_1', 'https://chat.openai.com/');
-        mainWindow.loadURL(url_1);
+        const isDualView = store.get('dual_view', false);
+        
+        if (isDualView) {
+            // dual viewの場合はright view（webview2）のみ変更
+            mainWindow.webContents.executeJavaScript(`
+                setTimeout(() => {
+                    try {
+                        const webview2 = document.getElementById('webview2');
+                        if (webview2) {
+                            webview2.src = '${url_1}';
+                            console.log('webview2 URL changed to: ${url_1}');
+                        } else {
+                            console.error('webview2 not found');
+                        }
+                    } catch (error) {
+                        console.error('Error changing webview2 URL:', error);
+                    }
+                }, 100);
+            `).catch(err => console.error('Failed to execute JavaScript:', err));
+        } else {
+            mainWindow.webContents.executeJavaScript(`
+                setTimeout(() => {
+                    try {
+                        const mainWebview = document.getElementById('mainWebview');
+                        if (mainWebview) {
+                            mainWebview.src = '${url_1}';
+                            console.log('mainWebview URL changed to: ${url_1}');
+                        } else {
+                            console.error('mainWebview not found');
+                        }
+                    } catch (error) {
+                        console.error('Error changing mainWebview URL:', error);
+                    }
+                }, 100);
+            `).catch(err => console.error('Failed to execute JavaScript:', err));
+        }
     })
 
 
     globalShortcut.register('Control+Shift+2', () => {
         const url_2 = store.get('url_2', 'https://www.bing.com/chat');
-        mainWindow.loadURL(url_2);
+        const isDualView = store.get('dual_view', false);
+        
+        if (isDualView) {
+            // dual viewの場合はright view（webview2）のみ変更
+            mainWindow.webContents.executeJavaScript(`
+                setTimeout(() => {
+                    try {
+                        const webview2 = document.getElementById('webview2');
+                        if (webview2) {
+                            webview2.src = '${url_2}';
+                            console.log('webview2 URL changed to: ${url_2}');
+                        } else {
+                            console.error('webview2 not found');
+                        }
+                    } catch (error) {
+                        console.error('Error changing webview2 URL:', error);
+                    }
+                }, 100);
+            `).catch(err => console.error('Failed to execute JavaScript:', err));
+        } else {
+            mainWindow.webContents.executeJavaScript(`
+                setTimeout(() => {
+                    try {
+                        const mainWebview = document.getElementById('mainWebview');
+                        if (mainWebview) {
+                            mainWebview.src = '${url_2}';
+                            console.log('mainWebview URL changed to: ${url_2}');
+                        } else {
+                            console.error('mainWebview not found');
+                        }
+                    } catch (error) {
+                        console.error('Error changing mainWebview URL:', error);
+                    }
+                }, 100);
+            `).catch(err => console.error('Failed to execute JavaScript:', err));
+        }
     })
 
 
     globalShortcut.register('Control+Shift+3', () => {
         const url_3 = store.get('url_3', 'https://claude.ai/chats');
-        mainWindow.loadURL(url_3);
+        const isDualView = store.get('dual_view', false);
+        
+        if (isDualView) {
+            // dual viewの場合はright view（webview2）のみ変更
+            mainWindow.webContents.executeJavaScript(`
+                setTimeout(() => {
+                    try {
+                        const webview2 = document.getElementById('webview2');
+                        if (webview2) {
+                            webview2.src = '${url_3}';
+                            console.log('webview2 URL changed to: ${url_3}');
+                        } else {
+                            console.error('webview2 not found');
+                        }
+                    } catch (error) {
+                        console.error('Error changing webview2 URL:', error);
+                    }
+                }, 100);
+            `).catch(err => console.error('Failed to execute JavaScript:', err));
+        } else {
+            mainWindow.webContents.executeJavaScript(`
+                setTimeout(() => {
+                    try {
+                        const mainWebview = document.getElementById('mainWebview');
+                        if (mainWebview) {
+                            mainWebview.src = '${url_3}';
+                            console.log('mainWebview URL changed to: ${url_3}');
+                        } else {
+                            console.error('mainWebview not found');
+                        }
+                    } catch (error) {
+                        console.error('Error changing mainWebview URL:', error);
+                    }
+                }, 100);
+            `).catch(err => console.error('Failed to execute JavaScript:', err));
+        }
     })
 
     const shortcut_toggle = store.get('shortcut_toggle', 'Control+Shift+Q');

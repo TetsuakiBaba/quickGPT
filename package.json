@@ -1,6 +1,6 @@
 {
   "name": "Quick-GPT",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "quick access to openai chat.",
   "main": "main.js",
   "scripts": {
@@ -31,6 +31,7 @@
     "electron": "^29.1.0"
   },
   "dependencies": {
+    "@electron-forge/maker-pkg": "^7.3.0",
     "@electron-forge/plugin-auto-unpack-natives": "^7.3.0",
     "bootstrap": "^5.3.3",
     "electron": "^29.1.0",

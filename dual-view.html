@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Dual View</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .webview-container {
+            flex: 1;
+            height: 100%;
+            border: none;
+            position: relative;
+        }
+        
+        webview {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .divider {
+            width: 2px;
+            background-color: #ccc;
+            cursor: col-resize;
+            transition: background-color 0.2s;
+        }
+        
+        .divider:hover {
+            background-color: #999;
+        }
+        
+        .webview-label {
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="webview-container">
+        <div class="webview-label">Left View</div>
+        <webview id="webview1" src="https://chat.openai.com/" partition="persist:webview1"></webview>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="webview-container">
+        <div class="webview-label">Right View</div>
+        <webview id="webview2" src="https://chat.openai.com/" partition="persist:webview2"></webview>
+    </div>
+
+    <script>
+        // webviewの準備ができたらフォーカスを設定
+        const webview1 = document.getElementById('webview1');
+        const webview2 = document.getElementById('webview2');
+        
+        // 初期URL設定関数
+        window.setInitialUrls = function(url1, url2) {
+            console.log('setInitialUrls called with:', url1, url2);
+            try {
+                if (webview1 && url1) {
+                    // 既存のURLがある場合でも上書き
+                    webview1.src = url1;
+                    console.log('webview1 initialized with:', url1);
+                }
+                if (webview2 && url2) {
+                    // 既存のURLがある場合でも上書き
+                    webview2.src = url2;
+                    console.log('webview2 initialized with:', url2);
+                }
+            } catch (error) {
+                console.error('Error setting initial URLs:', error);
+            }
+        };
+        
+        webview1.addEventListener('dom-ready', () => {
+            console.log('webview1 dom-ready');
+            setTimeout(() => {
+                webview1.executeJavaScript(`
+                    const textBox = document.querySelector('textarea');
+                    if (textBox) {
+                        textBox.focus();
+                    }
+                `).catch(err => console.log('Focus error:', err));
+            }, 1000);
+        });
+
+        webview2.addEventListener('dom-ready', () => {
+            console.log('webview2 dom-ready');
+        });
+
+        // ドラッグで分割位置を調整する機能
+        const divider = document.querySelector('.divider');
+        let isResizing = false;
+
+        divider.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            e.preventDefault();
+        });
+
+        function handleMouseMove(e) {
+            if (!isResizing) return;
+            
+            const containerWidth = document.body.offsetWidth;
+            const leftWidth = (e.clientX / containerWidth) * 100;
+            const rightWidth = 100 - leftWidth;
+            
+            // 最小幅を20%に制限
+            if (leftWidth > 20 && rightWidth > 20) {
+                document.querySelector('.webview-container:first-child').style.flex = `0 0 ${leftWidth}%`;
+                document.querySelector('.webview-container:last-child').style.flex = `0 0 ${rightWidth}%`;
+            }
+        }
+
+        function handleMouseUp() {
+            isResizing = false;
+            document.body.style.cursor = 'default';
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        }
+
+        // IPCメッセージを受信してwebviewのURLを更新
+        window.addEventListener('message', (event) => {
+            const { type, data } = event.data;
+            if (type === 'update-webview-url') {
+                const { webviewId, url } = data;
+                const webview = document.getElementById(webviewId);
+                if (webview) {
+                    webview.src = url;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

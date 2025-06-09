@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Single View</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        webview {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <webview id="mainWebview" src="https://chat.openai.com/" partition="persist:main"></webview>
+
+    <script>
+        const mainWebview = document.getElementById('mainWebview');
+        
+        mainWebview.addEventListener('dom-ready', () => {
+            console.log('mainWebview dom-ready');
+            setTimeout(() => {
+                mainWebview.executeJavaScript(`
+                    const textBox = document.querySelector('textarea');
+                    if (textBox) {
+                        textBox.focus();
+                    }
+                `).catch(err => console.log('Focus error:', err));
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
