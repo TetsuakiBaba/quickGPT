@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>QuickGPT</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        /* Single View Layout */
+        .single-view {
+            display: block;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .single-view .dual-container {
+            display: none;
+        }
+
+        .single-view .single-container {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Dual View Layout */
+        .dual-view {
+            display: block;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .dual-view .single-container {
+            display: none;
+        }
+
+        .dual-view .dual-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .webview-container {
+            flex: 1;
+            height: 100%;
+            border: none;
+            position: relative;
+        }
+
+        webview {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .divider {
+            width: 2px;
+            background-color: #ddd;
+            flex-shrink: 0;
+        }
+
+        .webview-label {
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        /* Hidden webview for state preservation */
+        .hidden-webview {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            visibility: hidden;
+        }
+    </style>
+</head>
+
+<body class="single-view">
+    <!-- Single View Container -->
+    <div class="single-container">
+        <webview id="mainWebview" src="https://chat.openai.com/" partition="persist:main"></webview>
+    </div>
+
+    <!-- Dual View Container -->
+    <div class="dual-container">
+        <div class="webview-container">
+            <div class="webview-label">Left View</div>
+            <webview id="webview1" src="https://chat.openai.com/" partition="persist:webview1"></webview>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="webview-container">
+            <div class="webview-label">Right View</div>
+            <webview id="webview2" src="https://chat.openai.com/" partition="persist:webview2"></webview>
+        </div>
+    </div>
+
+    <script>
+        // webview要素の参照
+        const mainWebview = document.getElementById('mainWebview');
+        const webview1 = document.getElementById('webview1');
+        const webview2 = document.getElementById('webview2');
+
+        let currentMode = 'single'; // 'single' or 'dual'
+        let isInitialized = false;
+
+        // DOMの準備完了を待つ
+        const waitForDOMReady = () => {
+            return new Promise((resolve) => {
+                if (document.readyState === 'complete') {
+                    resolve();
+                } else {
+                    window.addEventListener('load', resolve);
+                }
+            });
+        };
+
+        // webviewの準備完了を待つ
+        const waitForWebviewReady = () => {
+            return new Promise((resolve) => {
+                let readyCount = 0;
+                const totalWebviews = 3;
+
+                const checkReady = () => {
+                    readyCount++;
+                    if (readyCount >= totalWebviews) {
+                        resolve();
+                    }
+                };
+
+                // 各webviewの準備完了を監視
+                if (mainWebview) {
+                    if (mainWebview.getWebContentsId) {
+                        checkReady();
+                    } else {
+                        mainWebview.addEventListener('dom-ready', checkReady, { once: true });
+                    }
+                } else {
+                    checkReady();
+                }
+
+                if (webview1) {
+                    if (webview1.getWebContentsId) {
+                        checkReady();
+                    } else {
+                        webview1.addEventListener('dom-ready', checkReady, { once: true });
+                    }
+                } else {
+                    checkReady();
+                }
+
+                if (webview2) {
+                    if (webview2.getWebContentsId) {
+                        checkReady();
+                    } else {
+                        webview2.addEventListener('dom-ready', checkReady, { once: true });
+                    }
+                } else {
+                    checkReady();
+                }
+
+                // タイムアウト処理
+                setTimeout(resolve, 3000);
+            });
+        };
+
+        // 初期化処理
+        const initialize = async () => {
+            try {
+                await waitForDOMReady();
+                await waitForWebviewReady();
+                isInitialized = true;
+                console.log('All webviews are ready for interaction');
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                isInitialized = true; // エラーでも継続
+            }
+        };
+
+        // モード切り替え関数（改善版）
+        window.switchToMode = function (mode, preserveUrl = true) {
+            console.log(`Switching to ${mode} mode`);
+
+            // 初期化チェック
+            if (!isInitialized) {
+                console.warn('System not fully initialized, attempting switch anyway');
+            }
+
+            try {
+                const body = document.body;
+
+                if (mode === 'dual' && currentMode === 'single') {
+                    // Single to Dual: mainWebviewのURLを取得してwebview1に設定
+                    if (preserveUrl && mainWebview && mainWebview.src) {
+                        const currentUrl = mainWebview.src;
+                        console.log('Preserving URL from single view:', currentUrl);
+
+                        // webview1にmainWebviewのURLを設定（安全に）
+                        if (webview1 && webview1.src !== currentUrl) {
+                            try {
+                                webview1.src = currentUrl;
+                                console.log('webview1 URL set successfully');
+                            } catch (error) {
+                                console.warn('Failed to set webview1 src:', error);
+                            }
+                        }
+                        // webview2にも同じURLを設定（安全に）
+                        if (webview2 && webview2.src !== currentUrl) {
+                            try {
+                                webview2.src = currentUrl;
+                                console.log('webview2 URL set successfully');
+                            } catch (error) {
+                                console.warn('Failed to set webview2 src:', error);
+                            }
+                        }
+                    }
+
+                    body.className = 'dual-view';
+                    currentMode = 'dual';
+                    console.log('Switched to dual view successfully');
+
+                } else if (mode === 'single' && currentMode === 'dual') {
+                    // Dual to Single: webview1のURLを取得してmainWebviewに設定
+                    if (preserveUrl && webview1 && webview1.src) {
+                        const leftUrl = webview1.src;
+                        console.log('Preserving URL from left view:', leftUrl);
+
+                        // mainWebviewにwebview1のURLを設定（安全に）
+                        if (mainWebview && mainWebview.src !== leftUrl) {
+                            try {
+                                mainWebview.src = leftUrl;
+                                console.log('mainWebview URL set successfully');
+                            } catch (error) {
+                                console.warn('Failed to set mainWebview src:', error);
+                            }
+                        }
+                    }
+
+                    body.className = 'single-view';
+                    currentMode = 'single';
+                    console.log('Switched to single view successfully');
+                }
+
+                // フォーカス設定（より安全に）
+                setTimeout(() => {
+                    try {
+                        if (mode === 'single' && mainWebview) {
+                            // webviewの準備状態を確認
+                            if (mainWebview.getWebContentsId && mainWebview.getWebContentsId() > 0) {
+                                mainWebview.executeJavaScript(`
+                                    try {
+                                        const textBox = document.querySelector('textarea');
+                                        if (textBox) {
+                                            textBox.focus();
+                                        }
+                                    } catch (e) {
+                                        console.log('Focus attempt failed:', e);
+                                    }
+                                `).catch(err => console.log('Focus error (mainWebview):', err));
+                            }
+                        } else if (mode === 'dual' && webview1) {
+                            // webviewの準備状態を確認
+                            if (webview1.getWebContentsId && webview1.getWebContentsId() > 0) {
+                                webview1.executeJavaScript(`
+                                    try {
+                                        const textBox = document.querySelector('textarea');
+                                        if (textBox) {
+                                            textBox.focus();
+                                        }
+                                    } catch (e) {
+                                        console.log('Focus attempt failed:', e);
+                                    }
+                                `).catch(err => console.log('Focus error (webview1):', err));
+                            }
+                        }
+                    } catch (error) {
+                        console.log('Error setting focus:', error);
+                    }
+                }, 500);
+
+            } catch (error) {
+                console.error('Error in switchToMode:', error);
+                throw error; // エラーを再投げして呼び出し元で処理
+            }
+        };
+
+        // 初期化開始
+        initialize();
+
+        // URL設定関数（既存との互換性のため）
+        window.setInitialUrls = function (url1, url2) {
+            console.log('setInitialUrls called with:', url1, url2);
+            try {
+                if (webview1 && url1 && webview1.src !== url1) {
+                    webview1.src = url1;
+                    console.log('webview1 URL set to:', url1);
+                }
+                if (webview2 && url2 && webview2.src !== url2) {
+                    webview2.src = url2;
+                    console.log('webview2 URL set to:', url2);
+                }
+            } catch (error) {
+                console.error('Error setting initial URLs:', error);
+            }
+        };
+
+        // 現在のモードを取得する関数
+        window.getCurrentMode = function () {
+            return currentMode;
+        };
+
+        // webviewのdom-readyイベント（安全なエラーハンドリング付き）
+        if (mainWebview) {
+            mainWebview.addEventListener('dom-ready', () => {
+                console.log('mainWebview dom-ready');
+            });
+        }
+
+        if (webview1) {
+            webview1.addEventListener('dom-ready', () => {
+                console.log('webview1 dom-ready');
+            });
+        }
+
+        if (webview2) {
+            webview2.addEventListener('dom-ready', () => {
+                console.log('webview2 dom-ready');
+            });
+        }
+
+        // IPCメッセージを受信してwebviewのURLを更新
+        window.addEventListener('message', (event) => {
+            try {
+                const { type, data } = event.data;
+                if (type === 'update-webview-url') {
+                    const { webviewId, url } = data;
+                    const webview = document.getElementById(webviewId);
+                    if (webview && webview.src !== url) {
+                        webview.src = url;
+                    }
+                }
+            } catch (error) {
+                console.warn('Error handling message:', error);
+            }
+        });
+    </script>
+</body>
+
+</html>
