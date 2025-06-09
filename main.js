@@ -470,8 +470,21 @@ app.whenReady().then(() => {
     if (app.dock) app.dock.hide();
     global.mainWindow = mainWindow = createWindow()
 
-    // アプリケーションメニューを設定（シンプルに）
-    const template = [];
+    // アプリケーションメニューを設定（編集メニューを含む）
+    const template = [
+        {
+            label: 'Edit',
+            submenu: [
+                { role: 'undo' },
+                { role: 'redo' },
+                { type: 'separator' },
+                { role: 'cut' },
+                { role: 'copy' },
+                { role: 'paste' },
+                { role: 'selectall' }
+            ]
+        }
+    ];
 
     // macOSの場合は、アプリ名メニューを追加
     if (process.platform === 'darwin') {
