@@ -26,6 +26,22 @@ let mainWindow = null
 const { updateElectronApp } = require('update-electron-app')
 updateElectronApp()
 
+const isHttpUrl = (url) => typeof url === 'string' && url.startsWith('http');
+const isSameOrigin = (targetUrl = '', sourceUrl = '') => {
+    try {
+        const target = new URL(targetUrl);
+        const source = new URL(sourceUrl);
+        return target.origin === source.origin;
+    } catch {
+        return false;
+    }
+};
+const shouldOpenExternally = (targetUrl, sourceUrl) => {
+    if (!isHttpUrl(targetUrl)) return false;
+    if (!sourceUrl) return true;
+    return !isSameOrigin(targetUrl, sourceUrl);
+};
+
 ipcMain.on('set-url', (event, url) => {
     console.log('set-url', url);
     mainWindow.loadURL(url);
@@ -158,6 +174,25 @@ app.on('browser-window-created', function (e, window) {
         }
     })
 })
+
+app.on('web-contents-created', (event, contents) => {
+    if (contents.getType() !== 'webview') return;
+
+    contents.setWindowOpenHandler(({ url }) => {
+        if (shouldOpenExternally(url, contents.getURL())) {
+            shell.openExternal(url);
+            return { action: 'deny' };
+        }
+        return { action: 'allow' };
+    });
+
+    contents.on('will-navigate', (navEvent, url) => {
+        if (shouldOpenExternally(url, contents.getURL())) {
+            navEvent.preventDefault();
+            shell.openExternal(url);
+        }
+    });
+});
 
 
 
